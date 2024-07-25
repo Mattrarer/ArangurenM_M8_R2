@@ -19,7 +19,7 @@ library(DT)
 library (shiny)
 
 
-df_filtered <- read_csv("C:\\Users\\vivir\\OneDrive\\Documentos\\1.Mateo\\Módulo 8\\Datos\\df_filtered")
+df_filtered <- read_csv("https://raw.githubusercontent.com/Mattrarer/ArangurenM_M8_R2/Datos/Datos_Depurados.csv")
 
 df_filtered <- df_filtered %>% 
        rename("Fem_First_Marriage" = "X1stmarr")
@@ -92,7 +92,7 @@ variable_name2 <- if (input$varias2 == 'Edad de primer matrimonio (mujeres)') {
 category <- if (input$Cuali == 'Continental') {
       'region'
     } else {
-      'religion.x'
+      'religion'
     }
 
 # Scatter plot by group
