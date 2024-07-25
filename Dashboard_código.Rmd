@@ -1,0 +1,202 @@
+---
+title: "Dashboard Mateo Aranguren Reto 2"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(DT)
+library (shiny)
+
+
+df_filtered <- read_csv("C:\\Users\\vivir\\OneDrive\\Documentos\\1.Mateo\\Módulo 8\\Datos\\df_filtered")
+
+df_filtered <- df_filtered %>% 
+       rename("Fem_First_Marriage" = "X1stmarr")
+  
+```
+
+
+Gráficos {data-icon="fa-signal"}
+============================================================================
+
+Column {.sidebar data-height=175}
+-------------------------------------------------------------------
+```{r}
+varias <- c('Edad de primer matrimonio (mujeres)','Porcentaje nacional de pobreza','Porcentaje de mujeres en la fuerza laboral','Años de escolaridad (Hombres)','Años de escolaridad (Mujeres)')
+
+selectInput("varias1",label="Variable (eje y)",choices=c(varias),selected="Edad de primer matrimonio (mujeres)",width = '175px')
+
+selectInput("varias2",label="Variable (eje x)",choices=c(varias),selected="Porcentaje de mujeres en la fuerza laboral",width = '175px')
+
+
+
+selectInput("Cuali",label="Selecciona divisón categórica",choices=c("Continental",'Religiosa'),selected="Seleccione",width = '175px')
+
+
+sliderInput("year", "Selecciona el año", 
+            min = min(df_filtered$time, na.rm = TRUE), 
+            max = max(df_filtered$time, na.rm = TRUE), 
+            value = min(df_filtered$time, na.rm = TRUE), 
+            step = 1, 
+            sep = "")
+
+```
+Column {data-width=550}
+-----------------------------------------------------------------------
+
+### Mundo: `r reactive(input$varias1)` vs `r reactive(input$varias2)`
+
+```{r}
+
+renderPlot({
+# Filtrar los datos para compararlos en la misma dimensión temporal
+df_filtered_2019 <- df_filtered %>% filter(time == input$year)
+
+variable_name1 <- if (input$varias1 == 'Edad de primer matrimonio (mujeres)') {
+      "Fem_First_Marriage"
+    } else if (input$varias1 == 'Porcentaje nacional de pobreza') {
+      "Poverty"
+    } else if (input$varias1 == 'Porcentaje de mujeres en la fuerza laboral') {
+      "FemLabour"
+    }  else if (input$varias1 == 'Años de escolaridad (Hombres)') {
+      "MenSchoolYr"
+    }  else if (input$varias1 == 'Años de escolaridad (Mujeres)') {
+      "FemSchoolYr"
+    }
+
+
+variable_name2 <- if (input$varias2 == 'Edad de primer matrimonio (mujeres)') {
+      "Fem_First_Marriage"
+    } else if (input$varias2 == 'Porcentaje nacional de pobreza') {
+      "Poverty"
+    } else if (input$varias2 == 'Porcentaje de mujeres en la fuerza laboral') {
+      "FemLabour"
+    }  else if (input$varias2 == 'Años de escolaridad (Hombres)') {
+      "MenSchoolYr"
+    }  else if (input$varias2 == 'Años de escolaridad (Mujeres)') {
+      "FemSchoolYr"
+    }
+
+
+category <- if (input$Cuali == 'Continental') {
+      'region'
+    } else {
+      'religion.x'
+    }
+
+# Scatter plot by group
+ggplot(df_filtered_2019, aes(x= get(variable_name2), y = get(variable_name1) , color = get(category))) +
+  labs(x = input$varias2, y = input$varias1, color = input$Cuali) + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, size = 1, color = "#7133AB")
+})
+
+```
+
+Column {data-width=350, data-height=250}
+-----------------------------------------------------------------------
+
+### Cambio en el tiempo de `r reactive(input$varias1)` y el valor a 2019 en  `r reactive(input$Pa_sel)`
+
+```{r}
+
+selectInput("Pa_sel",label="Selecciona el país",choices=c("Seleccione",unique(df_filtered$country)),selected="Colombia",width = '175px')
+
+renderUI({
+  
+  country_data <- df_filtered %>% 
+    filter(country == input$Pa_sel)
+
+variable_name1 <- if (input$varias1 == 'Edad de primer matrimonio (mujeres)') {
+      "Fem_First_Marriage"
+    } else if (input$varias1 == 'Porcentaje nacional de pobreza') {
+      "Poverty"
+    } else if (input$varias1 == 'Porcentaje de mujeres en la fuerza laboral') {
+      "FemLabour"
+    }  else if (input$varias1 == 'Años de escolaridad (Hombres)') {
+      "MenSchoolYr"
+    }  else if (input$varias1 == 'Años de escolaridad (Mujeres)') {
+      "FemSchoolYr"
+    }
+
+first_value <- country_data[[variable_name1]][1]
+  last_value <- country_data[[variable_name1]][nrow(country_data)]
+ difference <- sprintf("%.2f", last_value - first_value) 
+ 
+ 
+df_filtered_2019tag <- country_data %>% filter(time == 2019)
+val2019 <- df_filtered_2019tag[[variable_name1]]
+
+  
+  
+    tags$div(
+    tags$p(style = "color:black", paste("La diferencia entre los valores reportados de", input$varias1, " entre 1972 y 2019 para", input$Pa_sel, "es:")),
+    tags$p(style = "color:#A55991; text-align:center; font-size:21px;",difference),
+    tags$p(style = "color:black", paste("El valor de ", input$varias1, " registrado en el 2019 en", input$Pa_sel, "es de:")),
+    tags$p(style = "color:#A55991; text-align:center; font-size:21px;",val2019))
+    
+
+     
+     
+     
+})
+
+```
+
+### `r reactive(input$Pa_sel)`: `r reactive(input$varias1)`
+
+```{r, fig.height=5}
+
+# Filtrar los datos por el país
+
+
+renderPlot({
+  df_filtered_coun <- df_filtered %>% filter(str_detect(country,if_else(input$Pa_sel=="Seleccione","Aruba",input$Pa_sel)))
+  
+df_filtered_coun$time <- as.numeric(df_filtered_coun$time)
+
+
+variable_name1 <- if (input$varias1 == 'Edad de primer matrimonio (mujeres)') {
+      "Fem_First_Marriage"
+    } else if (input$varias1 == 'Porcentaje nacional de pobreza') {
+      "Poverty"
+    } else if (input$varias1 == 'Porcentaje de mujeres en la fuerza laboral') {
+      "FemLabour"
+    }  else if (input$varias1 == 'Años de escolaridad (Hombres)') {
+      "MenSchoolYr"
+    }  else if (input$varias1 == 'Años de escolaridad (Mujeres)') {
+      "FemSchoolYr"
+    }
+
+ggplot(df_filtered_coun, aes_string(x = "time", y = paste0('`', variable_name1, '`'))) +
+  labs(x = "Año", y =input$varias1) +
+  geom_line(size=1,color="#C7049E")
+})
+
+
+
+```
+
+
+Tablas {data-icon="fa-table"}
+============================================================================
+```{r}
+datatable(df_filtered,
+          caption = "Datos Totales",
+          rownames= T,
+          filter = 'top', 
+          options = list(pageLength=25))
+
+
+```
