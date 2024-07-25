@@ -79,6 +79,5 @@ library(tidyverse)
 
 df_filtered <- dffinal %>% drop_na(iso)
 
-write_csv(df_filtered,"C:\\Users\\vivir\\OneDrive\\Documentos\\1.Mateo\\Módulo 8\\Datos\\df_filtered")
-dftry <- read_csv("df_filtered")
+write_csv(df_filtered,"Datos/Datos_Depurados.csv")
 
