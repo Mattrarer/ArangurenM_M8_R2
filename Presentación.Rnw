@@ -1,0 +1,282 @@
+\documentclass{beamer}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{amsmath}
+
+\title{Análisis de Datos Socioeconómicos}
+\author{Mateo Aranguren Rubio}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Objetivo del Análisis}
+  \begin{itemize}
+    \item Analizar la relación entre la edad del primer matrimonio de las mujeres, los años de educación y la incidencia laboral en Colombia y a nivel mundial.
+    \item Evaluar los cambios en la edad del primer matrimonio, la incidencia laboral de mujeres y los años de educación entre 1972 y 2019.
+    \item Analizar cómo características continentales, religiosas y el porcentaje de pobreza influyen en estas variables.
+    \item Examinar la evolución de la relación entre los años de educación de hombres y mujeres.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Datos y Depuración}
+  \begin{itemize}
+    \item Variables seleccionadas:
+      \begin{itemize}
+        \item Edad al contraer el primer matrimonio (mujeres)
+        \item Participación femenina en el ambiente laboral
+        \item Promedio de escolaridad de hombres
+        \item Promedio de escolaridad de mujeres
+        \item Medición local de pobreza
+      \end{itemize}
+    \item Análisis global considerando:
+      \begin{itemize}
+        \item División continental
+        \item Religión
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Promedios Mundiales (1972 y 2019)}
+  \scriptsize \scriptsize
+  <<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+library(readr)
+library(DT)
+
+
+df_filtered <- read_csv("https://raw.githubusercontent.com/Mattrarer/ArangurenM_M8_R2/Datos/Datos_Depurados.csv")
+
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Filtrar los datos para los años 1972 y 2019
+data_1972 <- df_filtered %>% filter(time == 1972)
+data_2019 <- df_filtered %>% filter(time == 2019)
+
+# Calcular los promedios
+promedios_1972 <- data_1972 %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = round(mean(X1stmarr, na.rm = TRUE), 2),
+    `Porcentaje nacional de pobreza` = round(mean(Poverty, na.rm = TRUE), 2),
+    `Porcentaje de mujeres en la fuerza laboral` = round(mean(FemLabour, na.rm = TRUE), 2),
+    `Años de escolaridad (Mujeres)` = round(mean(FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+promedios_2019 <- data_2019 %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = round(mean(X1stmarr, na.rm = TRUE), 2),
+    `Porcentaje nacional de pobreza` = round(mean(Poverty, na.rm = TRUE), 2),
+    `Porcentaje de mujeres en la fuerza laboral` = round(mean(FemLabour, na.rm = TRUE), 2),
+    `Años de escolaridad (Mujeres)` = round(mean(FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+# Calcular las diferencias
+diferencias <- promedios_2019 - promedios_1972
+
+# Combinar los resultados en una sola tabla
+tabla_resultados <- rbind(
+  promedios_1972 %>% mutate(Año = 1972),
+  promedios_2019 %>% mutate(Año = 2019),
+  diferencias %>% mutate(Año = "Diferencia")
+) %>% select(Año, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados, format = "latex", booktabs = TRUE, caption = "Promedios de 1972 y 2019 y la diferencia entre ellos en el mundo") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "0.1in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "0.5in")
+
+@
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Tabla general en Colombia}
+    \scriptsize \scriptsize
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+df_filtered_col <- df_filtered %>% filter(geo == 'col')
+
+
+# Filtrar los datos para los años 1972 y 2019
+data_1972_col <- df_filtered_col %>% filter(time == 1972)
+data_2019_col <- df_filtered_col %>% filter(time == 2019)
+
+# Calcular los promedios
+promedios_1972_col <- data_1972_col %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = mean(X1stmarr, na.rm = TRUE),
+    `Porcentaje nacional de pobreza` = mean(Poverty, na.rm = TRUE),
+    `Porcentaje de mujeres en la fuerza laboral` = mean(FemLabour, na.rm = TRUE),
+    `Años de escolaridad (Mujeres)` = mean(FemSchoolYr, na.rm = TRUE)
+  )
+
+promedios_2019_col <- data_2019_col %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = mean(X1stmarr, na.rm = TRUE),
+    `Porcentaje nacional de pobreza` = mean(Poverty, na.rm = TRUE),
+    `Porcentaje de mujeres en la fuerza laboral` = mean(FemLabour, na.rm = TRUE),
+    `Años de escolaridad (Mujeres)` = mean(FemSchoolYr, na.rm = TRUE)
+  )
+
+# Calcular las diferencias
+diferencias_col <- promedios_2019_col - promedios_1972_col
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_col <- rbind(
+  promedios_1972_col %>% mutate(Año = 1972),
+  promedios_2019_col %>% mutate(Año = 2019),
+  diferencias_col %>% mutate(Año = "Diferencia")
+) %>% select(Año, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_col, format = "latex", booktabs = TRUE, caption = "Promedios de 1972 y 2019 y la diferencia entre ellos en Colombia") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "0.1in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "0.5in")
+@
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Resultados Generales para Colombia y el mundo}
+\begin{itemize}
+  \item La diferencia de todas las variables fue mayor en magnitud en Colombia comparado con el promedio en el mundo.
+  \item En las variables Porcentaje nacional de pobreza y Porcentaje de mujeres en la fuerza laboral en Colombia, la variación de los resultados se encontró en \Sexpr{mean(data_2019_col$Poverty, na.rm = TRUE)-mean(data_1972_col$Poverty, na.rm = TRUE)} y \Sexpr{mean(data_2019_col$FemLabour, na.rm = TRUE)-mean(data_1972_col$FemLabour, na.rm = TRUE)}, respectivamente. Por su parte los valores mundiales para estas variables fue \Sexpr{round(mean(data_2019$Poverty, na.rm = TRUE),2)-round(mean(data_1972$Poverty, na.rm = TRUE),2)} y \Sexpr{round(mean(data_2019$FemLabour, na.rm = TRUE),2)-round(mean(data_1972$FemLabour, na.rm = TRUE), 2)}.
+  
+  \item  Por su parte las variables Edad de primer matrimonio (Mujeres) y Años de escolaridad (Mujeres) en Colombia, la variación de los resultados se encontró en \Sexpr{mean(data_2019_col$X1stmarr, na.rm = TRUE)-mean(data_1972_col$X1stmarr, na.rm = TRUE)} y \Sexpr{mean(data_2019_col$FemSchoolYr, na.rm = TRUE)-mean(data_1972_col$FemSchoolYr, na.rm = TRUE)}, respectivamente. Por su parte los valores mundiales para estas variables fue \Sexpr{round(mean(data_2019$X1stmarr, na.rm = TRUE),2)-round(mean(data_1972$X1stmarr, na.rm = TRUE),2)} y \Sexpr{round(mean(data_2019$FemSchoolYr, na.rm = TRUE),2)-round(mean(data_1972$FemSchoolYr, na.rm = TRUE), 2)}.
+  
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas de Escolaridad y Edad de primer matrimonio 1972}
+      \scriptsize \small
+  <<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Edad primer matrimonio 1972'>>=
+library(ggplot2)
+ggplot(data_1972, aes(x= X1stmarr  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Edad de primer matrimonio' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas de Escolaridad y Edad de primer matrimonio 2019}
+  \scriptsize \small
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Edad primer matrimonio 2019'>>=
+ggplot(data_2019, aes(x= X1stmarr  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Edad de primer matrimonio' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Relación entre las variables}
+Es evidente que en 1972 no había una relación entre la 'edad de primer matrimonio' y la 'escolaridad en años de las mujeres'. Sin embargo, para 2019 parece que sí existe una relación directa entre las variables, siendo la relación positiva. Esto puede responder a que ambas variables responden a cambios sociales y de derechos para las mujeres.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas de Escolaridad y Edad de primer matrimonio 1972, agrupado por religión}
+  \scriptsize \small
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de mujeres en la fuerza laboral en 1972'>>=
+library(ggplot2)
+ggplot(data_1972, aes(x= FemLabour  , y = FemSchoolYr , color = religion)) +
+  labs(x = 'Porcentaje de mujeres en la fuerza laboral' , y = 'Años de escolaridad (mujeres)', color = 'Religión') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas de Escolaridad y Edad de primer matrimonio 2019, agrupado por religión}
+  \scriptsize \small
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de mujeres en la fuerza laboral en 2019'>>=
+ggplot(data_2019, aes(x= FemLabour  , y = FemSchoolYr , color = religion)) +
+  labs(x = 'Porcentaje de mujeres en la fuerza laboral' , y = 'Años de escolaridad (mujeres)', color = 'Religión') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Relación entre las variables, teniendo en cuenta la religión}
+Si bien las gráficas siguen sin mostrar ninguna relación entre las dos variables, cuando agrupamos los datos por religión podemos ver que respecto a la religión musulmana hay un cambio negativo en el porcentaje de mujeres en el trabajo. En la gráfica se ve que en 1972 los puntos azules estaban dispersos igual que los otros a lo largo de toda la gráfica. Sin embargo, para el 2019 estos puntos se han acumulado en la esquina inferior izquierda, mostrando que el cambio de este grupo ha sido diferencial con el resto. 
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas evolución de Edad de Primer Matrimonio (mujeres) en Colombia}
+  \scriptsize \tiny
+<<echo=FALSE, fig.pos="h", fig.align='center', fig.dim = c(2,2), message=FALSE, warning=FALSE>>=
+
+df_filtered_coun <- df_filtered %>% filter(geo == 'col')
+
+
+ggplot(df_filtered_coun, aes(x = time , y = X1stmarr)) +
+  labs(x = "Año", y ='Edad del primer matrimonio') +
+  geom_line(size=1,color="#C7049E")
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas evolución de Mujeres en Fuerza Laboral en Colombia}
+  \scriptsize \tiny
+  <<echo=FALSE, fig.pos="h", fig.align='center', fig.dim = c(2,2), message=FALSE, warning=FALSE>>=
+ggplot(df_filtered_coun, aes(x = time , y = FemLabour)) +
+  labs(x = "Año", y ='Porcentaje en Fuerza Laboral') +
+  geom_line(size=1,color="#C7049E")
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas evolución de Porcentaje Nacional de Pobreza en Colombia}
+  \scriptsize \tiny
+  <<echo=FALSE, fig.pos="h", fig.align='center', fig.dim = c(2,2), message=FALSE, warning=FALSE>>=
+
+ggplot(df_filtered_coun, aes(x = time , y = Poverty)) +
+  labs(x = "Año", y ='Porcentaje Nacional de Pobreza') +
+  geom_line(size=1,color="#C7049E")
+@
+\end{frame}
+
+\begin{frame}
+  \frametitle{Gráficas evolución de Años de Escolaridad (Mujeres) en Colombia}
+  \scriptsize \tiny
+  <<echo=FALSE, fig.pos="h", fig.align='center', fig.dim = c(2,2), message=FALSE, warning=FALSE>>=
+ggplot(df_filtered_coun, aes(x = time , y = FemSchoolYr)) +
+  labs(x = "Año", y ='Años de escolaridad') +
+  geom_line(size=1,color="#C7049E")
+@
+
+\end{frame}
+\begin{frame}
+  \frametitle{Evolución de las Variables en Colombia}
+Para los datos en Colombia la edad de primer matrimonio y los años de escolaridad aumentan. La segunda variable aumenta de manera constante y de manera regular. El porcentaje de pobreza y el porcentaje de las mujeres en la fuerza laboral disminuyeron considerablemente. El valor de fuerza laboral tiene un cambio inconstante que podría responder a cambios sociales, políticos y legales. Sería importante revisar estos resultados a más profundidad. 
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Cierre y Objetivos futuros}
+En esta presentación se pueden ver todas las distintas táblas y gráficos que responden a los objetivos presentados. Es importante seguir indagando en las relaciones que se muestran en las gráficas. 
+\end{frame}
+\end{document}
