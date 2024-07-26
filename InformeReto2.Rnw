@@ -1,0 +1,613 @@
+\documentclass{report}
+\usepackage{blindtext}
+\usepackage{booktabs}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[spanish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{multicol}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+
+\usepackage{geometry}
+ \geometry{letterpaper}
+ 
+\title{Informe Reto 2 Módulo 8}
+\author{Mateo Aranguren Rubio}
+\date{\Sexpr{Sys.Date()}}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+
+
+\section*{I. Desarrollo y ejecución incial del proyecto de Ciencia de datos}
+\subsection*{Objetivo principal}
+
+Analizar la relación entre la edad del primer matrimonio de las mujeres, los años de educación y la incidencia laboral en Colombia y a nivel mundial.
+
+\subsection*{Objetivos específicos}
+
+de los datos proporcionados en el repositorio y decidí por los siguientes
+\begin{itemize}
+  \item Evaluar el cambio que se ha prensentado en la edad del primer matrimonio de las mujeres, la incidencia laboral de mujeres y los años de educación en Colombia y a nivel mundial a lo largo del tiempo en un rango de 1972 a 2019.
+  \item Analizar cómo las características continentales, religiosas y el porcentaje de pobreza influyen con las variables sociales identificadas.
+  \item Examinar la evolución de la relación entre los años de educación entre hombres y mujeres en Colombia y a nivel mundial en el rango de tiempo establecido.
+\end{itemize}
+
+\subsection*{Datos y depuración}
+
+En el repositorio de Gapminder se encuentran distintas variables socioeconómicas de interés. Sin embargo, el primer paso fue el de seleccionar las variables relevantes que respondieran a las necesidades específicas. \medskip 
+
+El objetivo principal de este análisis es el de identificar relaciones entre distintos factores que pueden llegar a afectar a una población minoritaria (mujeres). Para ello se hizo una exhaustiva revisión de los datos proporcionados en el repositorio y decidí por los siguientes:
+
+\begin{itemize}
+  \item Edad al contraer el primer matrimonio (medido únicamente en mujeres).
+  \item Participación femenina en el ambiente laboral.
+  \item Promedio de escolaridad hombres.
+  \item Promedio de escolaridad mujeres.
+  \item Medición local de pobreza.
+
+\end{itemize}
+
+Adicionalmente, para el análisis global de los datos se tendrán en cuenta: 
+\medskip 
+\begin{itemize}
+  \item División continental
+  \item Religión\medskip 
+\end{itemize}
+
+\subsection*{Audencia objetivo}
+
+La audencia objetivo del análisis son profecionales de ciencias sociales en general, si bien no son conocedores expertos de estadística, son personas con un conocimiento básico. Adicionalmente, son personas que tienen experiencia manejando información gráfica de variables sociales. \medskip
+
+
+Por esto se tendrán en cuenta tanto las características de forma como de contenido y la especificidad con la que se hablará de la parte estadística. Si bien esta población puede llegar a comprender las interacciones de las variables de manera social, es improtante que también lleguen a comprenderlas de manera estadística. \medskip
+\bigskip
+
+\newpage
+
+\section*{II. Tablas de resultados}
+\subsection*{Tabla general alrededor del mundo}
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+library(readr)
+library(DT)
+
+
+df_filtered <- read_csv("https://raw.githubusercontent.com/Mattrarer/ArangurenM_M8_R2/Datos/Datos_Depurados.csv")
+
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Filtrar los datos para los años 1972 y 2019
+data_1972 <- df_filtered %>% filter(time == 1972)
+data_2019 <- df_filtered %>% filter(time == 2019)
+
+# Calcular los promedios
+promedios_1972 <- data_1972 %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = round(mean(X1stmarr, na.rm = TRUE), 2),
+    `Porcentaje nacional de pobreza` = round(mean(Poverty, na.rm = TRUE), 2),
+    `Porcentaje de mujeres en la fuerza laboral` = round(mean(FemLabour, na.rm = TRUE), 2),
+    `Años de escolaridad (Mujeres)` = round(mean(FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+promedios_2019 <- data_2019 %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = round(mean(X1stmarr, na.rm = TRUE), 2),
+    `Porcentaje nacional de pobreza` = round(mean(Poverty, na.rm = TRUE), 2),
+    `Porcentaje de mujeres en la fuerza laboral` = round(mean(FemLabour, na.rm = TRUE), 2),
+    `Años de escolaridad (Mujeres)` = round(mean(FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+# Calcular las diferencias
+diferencias <- promedios_2019 - promedios_1972
+
+# Combinar los resultados en una sola tabla
+tabla_resultados <- rbind(
+  promedios_1972 %>% mutate(Año = 1972),
+  promedios_2019 %>% mutate(Año = 2019),
+  diferencias %>% mutate(Año = "Diferencia")
+) %>% select(Año, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados, format = "latex", booktabs = TRUE, caption = "Promedios de 1972 y 2019 y la diferencia entre ellos en el mundo") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+@
+
+\subsection*{Tabla general en Colombia}
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+df_filtered_col <- df_filtered %>% filter(geo == 'col')
+
+
+# Filtrar los datos para los años 1972 y 2019
+data_1972_col <- df_filtered_col %>% filter(time == 1972)
+data_2019_col <- df_filtered_col %>% filter(time == 2019)
+
+# Calcular los promedios
+promedios_1972_col <- data_1972_col %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = mean(X1stmarr, na.rm = TRUE),
+    `Porcentaje nacional de pobreza` = mean(Poverty, na.rm = TRUE),
+    `Porcentaje de mujeres en la fuerza laboral` = mean(FemLabour, na.rm = TRUE),
+    `Años de escolaridad (Mujeres)` = mean(FemSchoolYr, na.rm = TRUE)
+  )
+
+promedios_2019_col <- data_2019_col %>% 
+  summarise(
+    `Edad de primer matrimonio (Mujeres)` = mean(X1stmarr, na.rm = TRUE),
+    `Porcentaje nacional de pobreza` = mean(Poverty, na.rm = TRUE),
+    `Porcentaje de mujeres en la fuerza laboral` = mean(FemLabour, na.rm = TRUE),
+    `Años de escolaridad (Mujeres)` = mean(FemSchoolYr, na.rm = TRUE)
+  )
+
+# Calcular las diferencias
+diferencias_col <- promedios_2019_col - promedios_1972_col
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_col <- rbind(
+  promedios_1972_col %>% mutate(Año = 1972),
+  promedios_2019_col %>% mutate(Año = 2019),
+  diferencias_col %>% mutate(Año = "Diferencia")
+) %>% select(Año, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_col, format = "latex", booktabs = TRUE, caption = "Promedios de 1972 y 2019 y la diferencia entre ellos en Colombia") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+@
+\medskip 
+
+Estos resultados nos muestran distintas cosas: 
+\medskip 
+\begin{itemize}
+  \item La diferencia de todas las variables fue mayor en magnitud en Colombia comparado con el promedio en el mundo.
+  \item En las variables "Porcentaje nacional de pobreza" y "Porcentaje de mujeres en la fuerza laboral" en Colombia, la variación de los resultados se encontró en \Sexpr{mean(data_2019_col$Poverty, na.rm = TRUE)-mean(data_1972_col$Poverty, na.rm = TRUE)} y \Sexpr{mean(data_2019_col$FemLabour, na.rm = TRUE)-mean(data_1972_col$FemLabour, na.rm = TRUE)}, respectivamente. Por su parte los valores mundiales para estas variables fue \Sexpr{round(mean(data_2019$Poverty, na.rm = TRUE),2)-round(mean(data_1972$Poverty, na.rm = TRUE),2)} y \Sexpr{round(mean(data_2019$FemLabour, na.rm = TRUE),2)-round(mean(data_1972$FemLabour, na.rm = TRUE), 2)}.
+  
+  \item  Por su parte las variables "Edad de primer matrimonio (Mujeres)" y "Años de escolaridad (Mujeres)" en Colombia, la variación de los resultados se encontró en \Sexpr{mean(data_2019_col$X1stmarr, na.rm = TRUE)-mean(data_1972_col$X1stmarr, na.rm = TRUE)} y \Sexpr{mean(data_2019_col$FemSchoolYr, na.rm = TRUE)-mean(data_1972_col$FemSchoolYr, na.rm = TRUE)}, respectivamente. Por su parte los valores mundiales para estas variables fue \Sexpr{round(mean(data_2019$X1stmarr, na.rm = TRUE),2)-round(mean(data_1972$X1stmarr, na.rm = TRUE),2)} y \Sexpr{round(mean(data_2019$FemSchoolYr, na.rm = TRUE),2)-round(mean(data_1972$FemSchoolYr, na.rm = TRUE), 2)}.
+  
+\end{itemize}
+\medskip 
+
+Estos datos muestran que tanto el porcentaje de pobreza, la edad de primer matrimonio y años de escolaridad mostraron una mejora con respecto a la evolución mundial. Sin embargo, el porcentaje de mujeres en la fuerza laboral disminuyó considerablemente. Sería indispensable que se hicera una revisión de qué causó esto o se revisará si hay alguna discrepancia en la medición de los datos obtenidos. 
+
+
+\subsection*{Tablas por Región}
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+
+
+data_1972_europe <- df_filtered %>% filter(time == 1972 & region == 'europe')
+data_2019_europe <- df_filtered %>% filter(time == 2019 & region == 'europe')
+
+data_1972_asia <- df_filtered %>% filter(time == 1972 & region == 'asia')
+data_2019_asia <- df_filtered %>% filter(time == 2019 & region == 'asia')
+
+data_1972_americas <- df_filtered %>% filter(time == 1972 & region == 'americas')
+data_2019_americas <- df_filtered %>% filter(time == 2019 & region == 'americas')
+
+data_1972_africa <- df_filtered %>% filter(time == 1972 & region == 'africa')
+data_2019_africa <- df_filtered %>% filter(time == 2019 & region == 'africa')
+
+
+
+# Calcular los promedios
+promedios_1972_X1stmarr <- 
+  tibble(
+    `Europa` = round(mean(data_1972_europe$X1stmarr, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_1972_asia$X1stmarr, na.rm = TRUE), 2),
+    `América` = round(mean(data_1972_americas$X1stmarr, na.rm = TRUE), 2),
+    `África` = round(mean(data_1972_africa$X1stmarr, na.rm = TRUE), 2)
+  )
+
+promedios_1972_Poverty <- 
+  tibble(
+    `Europa` = round(mean(data_1972_europe$Poverty, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_1972_asia$Poverty, na.rm = TRUE), 2),
+    `América` = round(mean(data_1972_americas$Poverty, na.rm = TRUE), 2),
+    `África` = round(mean(data_1972_africa$Poverty, na.rm = TRUE), 2)
+  )
+
+promedios_1972_FemLabour <- 
+  tibble(
+    `Europa` = round(mean(data_1972_europe$FemLabour, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_1972_asia$FemLabour, na.rm = TRUE), 2),
+    `América` = round(mean(data_1972_americas$FemLabour, na.rm = TRUE), 2),
+    `África` = round(mean(data_1972_africa$FemLabour, na.rm = TRUE), 2)
+  )
+
+promedios_1972_FemSchoolYr <- 
+  tibble(
+    `Europa` = round(mean(data_1972_europe$FemSchoolYr, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_1972_asia$FemSchoolYr, na.rm = TRUE), 2),
+    `América` = round(mean(data_1972_americas$FemSchoolYr, na.rm = TRUE), 2),
+    `África` = round(mean(data_1972_africa$FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+
+
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_1972 <- rbind(
+  promedios_1972_X1stmarr %>% mutate(Variable = 'Edad de primer matrimonio (Mujeres)'),
+  promedios_1972_Poverty %>% mutate(Variable = 'Porcentaje nacional de pobreza'),
+  promedios_1972_FemLabour %>% mutate(Variable = 'Porcentaje de mujeres en la fuerza laboral'),
+  promedios_1972_FemSchoolYr %>% mutate(Variable = 'Años de escolaridad (Mujeres)')
+) %>% select(Variable, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_1972, format = "latex", booktabs = TRUE, caption = "Promedios de 1972 por continente") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+@
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+# Calcular los promedios
+promedios_2019_X1stmarr <- 
+  tibble(
+    `Europa` = round(mean(data_2019_europe$X1stmarr, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_2019_asia$X1stmarr, na.rm = TRUE), 2),
+    `América` = round(mean(data_2019_americas$X1stmarr, na.rm = TRUE), 2),
+    `África` = round(mean(data_2019_africa$X1stmarr, na.rm = TRUE), 2)
+  )
+
+promedios_2019_Poverty <- 
+  tibble(
+    `Europa` = round(mean(data_2019_europe$Poverty, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_2019_asia$Poverty, na.rm = TRUE), 2),
+    `América` = round(mean(data_2019_americas$Poverty, na.rm = TRUE), 2),
+    `África` = round(mean(data_2019_africa$Poverty, na.rm = TRUE), 2)
+  )
+
+promedios_2019_FemLabour <- 
+  tibble(
+    `Europa` = round(mean(data_2019_europe$FemLabour, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_2019_asia$FemLabour, na.rm = TRUE), 2),
+    `América` = round(mean(data_2019_americas$FemLabour, na.rm = TRUE), 2),
+    `África` = round(mean(data_2019_africa$FemLabour, na.rm = TRUE), 2)
+  )
+
+promedios_2019_FemSchoolYr <- 
+  tibble(
+    `Europa` = round(mean(data_2019_europe$FemSchoolYr, na.rm = TRUE), 2),
+    `Asia` = round(mean(data_2019_asia$FemSchoolYr, na.rm = TRUE), 2),
+    `América` = round(mean(data_2019_americas$FemSchoolYr, na.rm = TRUE), 2),
+    `África` = round(mean(data_2019_africa$FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+
+
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_2019 <- rbind(
+  promedios_2019_X1stmarr %>% mutate(Variable = 'Edad de primer matrimonio (Mujeres)'),
+  promedios_2019_Poverty %>% mutate(Variable = 'Porcentaje nacional de pobreza'),
+  promedios_2019_FemLabour %>% mutate(Variable = 'Porcentaje de mujeres en la fuerza laboral'),
+  promedios_2019_FemSchoolYr %>% mutate(Variable = 'Años de escolaridad (Mujeres)')
+) %>% select(Variable, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_2019, format = "latex", booktabs = TRUE, caption = "Promedios de 2019 por continente") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+@
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+diferencias_region_X1stmarr <- promedios_2019_X1stmarr - promedios_1972_X1stmarr
+diferencias_region_Poverty <- promedios_2019_Poverty - promedios_1972_Poverty
+diferencias_region_FemLabour <- promedios_2019_FemLabour - promedios_1972_FemLabour
+diferencias_region_FemSchoolYr <- promedios_2019_FemSchoolYr - promedios_1972_FemSchoolYr
+
+
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_dif <- rbind(
+  diferencias_region_X1stmarr %>% mutate(Variable = 'Edad de primer matrimonio (Mujeres)'),
+  diferencias_region_Poverty %>% mutate(Variable = 'Porcentaje nacional de pobreza'),
+  diferencias_region_FemLabour %>% mutate(Variable = 'Porcentaje de mujeres en la fuerza laboral'),
+  diferencias_region_FemSchoolYr %>% mutate(Variable = 'Años de escolaridad (Mujeres)')
+) %>% select(Variable, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_dif, format = "latex", booktabs = TRUE, caption = "Diferencias entre 1972 y 2019 por continente") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+
+
+@
+
+Para los datos en las tablas que presentan los datos agrupados continentalmente podemos identificar que: 
+
+\medskip 
+\begin{itemize}
+  
+  \item Con respecto a la variable 'Edad de primer matrimonio (Mujeres)' tanto en cambio, \Sexpr{round(mean(data_2019_europe$X1stmarr, na.rm = TRUE), 2)-round(mean(data_1972_europe$X1stmarr, na.rm = TRUE), 2)}, como en el resultado para 2019, \Sexpr{round(mean(data_2019_europe$X1stmarr, na.rm = TRUE), 2)}, Europa presentó los valores más altos.
+  
+  \item  Por su parte para la variable 'Porcentaje de pobreza nacional' África presentó el mayor valor tanto para el cambio como para el resultado para 2019, siendo \Sexpr{round(mean(data_2019_africa$Poverty, na.rm = TRUE), 2)-round(mean(data_1972_africa$Poverty, na.rm = TRUE), 2)} y \Sexpr{round(mean(data_2019_africa$Poverty, na.rm = TRUE), 2)}, respectivamente.
+  \item   Para la variable 'Porcentaje de mujeres en la fuerza laboral' América presentó el mayor valor  para el cambio con \Sexpr{round(mean(data_2019_americas$FemLabour, na.rm = TRUE), 2)-round(mean(data_1972_americas$FemLabour, na.rm = TRUE), 2)} y para el resultado para 2019 siendo \Sexpr{round(mean(data_2019_africa$FemLabour, na.rm = TRUE), 2)}, África presentó el resultado más alto. 
+
+    \item   Para la última variable, 'Años de escolaridad', el valor de cambio, \Sexpr{round(mean(data_2019_europe$FemSchoolYr, na.rm = TRUE), 2)-round(mean(data_1972_europe$FemSchoolYr, na.rm = TRUE), 2)}, y el resultado para 2019, \Sexpr{round(mean(data_2019_europe$FemSchoolYr, na.rm = TRUE), 2)}, los resultados más altos se presentaron en Europa.
+\end{itemize}
+
+\subsection*{Tablas por Religión}
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+
+
+data_1972_christian <- df_filtered %>% filter(time == 1972 & religion == 'christian')
+data_2019_christian <- df_filtered %>% filter(time == 2019 & religion == 'christian')
+
+data_1972_muslim <- df_filtered %>% filter(time == 1972 & religion == 'muslim')
+data_2019_muslim <- df_filtered %>% filter(time == 2019 & religion == 'muslim')
+
+data_1972_eastern_religions <- df_filtered %>% filter(time == 1972 & religion == 'eastern_religions')
+data_2019_eastern_religions <- df_filtered %>% filter(time == 2019 & religion == 'eastern_religions')
+
+
+
+
+# Calcular los promedios
+promedios_1972_X1stmarr <- 
+  tibble(
+    `Cristiana` = round(mean(data_1972_christian$X1stmarr, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_1972_muslim$X1stmarr, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_1972_eastern_religions$X1stmarr, na.rm = TRUE), 2)  )
+
+promedios_1972_Poverty <- 
+  tibble(
+    `Cristiana` = round(mean(data_1972_christian$Poverty, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_1972_muslim$Poverty, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_1972_eastern_religions$Poverty, na.rm = TRUE), 2)
+  )
+
+promedios_1972_FemLabour <- 
+  tibble(
+    `Cristiana` = round(mean(data_1972_christian$FemLabour, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_1972_muslim$FemLabour, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_1972_eastern_religions$FemLabour, na.rm = TRUE), 2)
+  )
+
+promedios_1972_FemSchoolYr <- 
+  tibble(
+    `Cristiana` = round(mean(data_1972_christian$FemSchoolYr, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_1972_muslim$FemSchoolYr, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_1972_eastern_religions$FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+
+
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_1972 <- rbind(
+  promedios_1972_X1stmarr %>% mutate(Variable = 'Edad de primer matrimonio (Mujeres)'),
+  promedios_1972_Poverty %>% mutate(Variable = 'Porcentaje nacional de pobreza'),
+  promedios_1972_FemLabour %>% mutate(Variable = 'Porcentaje de mujeres en la fuerza laboral'),
+  promedios_1972_FemSchoolYr %>% mutate(Variable = 'Años de escolaridad (Mujeres)')
+) %>% select(Variable, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_1972, format = "latex", booktabs = TRUE, caption = "Promedios de 1972 por religión") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+@
+
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+
+# Calcular los promedios
+promedios_2019_X1stmarr <- 
+  tibble(
+    `Cristiana` = round(mean(data_2019_christian$X1stmarr, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_2019_muslim$X1stmarr, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_2019_eastern_religions$X1stmarr, na.rm = TRUE), 2)
+  )
+
+promedios_2019_Poverty <- 
+  tibble(
+    `Cristiana` = round(mean(data_2019_christian$Poverty, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_2019_muslim$Poverty, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_2019_eastern_religions$Poverty, na.rm = TRUE), 2)
+  )
+
+promedios_2019_FemLabour <- 
+  tibble(
+    `Cristiana` = round(mean(data_2019_christian$FemLabour, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_2019_muslim$FemLabour, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_2019_eastern_religions$FemLabour, na.rm = TRUE), 2)
+  )
+
+promedios_2019_FemSchoolYr <- 
+  tibble(
+    `Cristiana` = round(mean(data_2019_christian$FemSchoolYr, na.rm = TRUE), 2),
+    `Musulmana` = round(mean(data_2019_muslim$FemSchoolYr, na.rm = TRUE), 2),
+    `Religiones Orientales` = round(mean(data_2019_eastern_religions$FemSchoolYr, na.rm = TRUE), 2)
+  )
+
+
+
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_2019 <- rbind(
+  promedios_2019_X1stmarr %>% mutate(Variable = 'Edad de primer matrimonio (Mujeres)'),
+  promedios_2019_Poverty %>% mutate(Variable = 'Porcentaje nacional de pobreza'),
+  promedios_2019_FemLabour %>% mutate(Variable = 'Porcentaje de mujeres en la fuerza laboral'),
+  promedios_2019_FemSchoolYr %>% mutate(Variable = 'Años de escolaridad (Mujeres)')
+) %>% select(Variable, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_2019, format = "latex", booktabs = TRUE, caption = "Promedios de 2019 por religión") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+@
+
+
+\clearpage
+
+
+
+<<echo = FALSE, message=FALSE, warning=FALSE >>=
+diferencias_religion_X1stmarr <- promedios_2019_X1stmarr - promedios_1972_X1stmarr
+diferencias_religion_Poverty <- promedios_2019_Poverty - promedios_1972_Poverty
+diferencias_religion_FemLabour <- promedios_2019_FemLabour - promedios_1972_FemLabour
+diferencias_religion_FemSchoolYr <- promedios_2019_FemSchoolYr - promedios_1972_FemSchoolYr
+
+
+
+# Combinar los resultados en una sola tabla
+tabla_resultados_dif <- rbind(
+  diferencias_religion_X1stmarr %>% mutate(Variable = 'Edad de primer matrimonio'),
+  diferencias_religion_Poverty %>% mutate(Variable = 'Porcentaje nacional de pobreza'),
+  diferencias_religion_FemLabour %>% mutate(Variable = 'Porcentaje de mujeres en la fuerza laboral'),
+  diferencias_religion_FemSchoolYr %>% mutate(Variable = 'Años de escolaridad (Mujeres)')
+) %>% select(Variable, everything())
+
+# Mostrar la tabla
+kable(tabla_resultados_dif, format = "latex", booktabs = TRUE, caption = "Diferencias entre 1972 y 2019 por religión") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)%>%
+  column_spec(1, width = "1.5in") %>%
+  column_spec(2:ncol(tabla_resultados), width = "1in")
+
+
+@
+
+En este caso, al filtrar por religión se observó que para todos los datos (menos pobreza) la religión que disminuyó entre 1972 y 2019 más los resultados fue la religión musulmana siendo Edad de primer matrimonio = \Sexpr{round(mean(data_2019_muslim$X1stmarr, na.rm = TRUE), 2)-round(mean(data_1972_muslim$X1stmarr, na.rm = TRUE), 2)}, 'Porcentaje de mujeres en la fuerza laboral' = \Sexpr{round(mean(data_2019_muslim$FemLabour, na.rm = TRUE), 2)-round(mean(data_1972_muslim$FemLabour, na.rm = TRUE), 2)} y 'Años de escolaridad (Mujeres)' = \Sexpr{round(mean(data_2019_muslim$FemSchoolYr, na.rm = TRUE), 2)-round(mean(data_1972_muslim$FemSchoolYr, na.rm = TRUE), 2)}. Por su parte, el mayor cambio de la variable 'porcentaje nacional' lo presentaron las religiones orientales con \Sexpr{round(mean(data_2019_eastern_religions$Poverty, na.rm = TRUE), 2)-round(mean(data_1972_eastern_religions$Poverty, na.rm = TRUE), 2)}
+
+\clearpage
+
+\section*{III. Gráficos}
+\subsection*{Relación entre variables en el mundo, Continental}
+
+Dado que la relación entre las distintas variables se puede ver de muchas maneras se priorizarán los gráficos que tengan un resultado relevante para el estudio.
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Edad primer matrimonio 1972'>>=
+library(ggplot2)
+ggplot(data_1972, aes(x= X1stmarr  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Edad de primer matrimonio' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Edad primer matrimonio 2019'>>=
+ggplot(data_2019, aes(x= X1stmarr  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Edad de primer matrimonio' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+Es evidente que en 1972 no había una relación entre la 'edad de primer matrimonio' y la 'escolaridad en años de las mujeres'. Sin embargo, para 2019 parece que sí existe una relación directa entre las variables, siendo la relación positiva. Esto puede responder a que ambas variables responden a cambios sociales y de derechos para las mujeres.
+
+\clearpage
+
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de mujeres en la fuerza laboral en 1972'>>=
+library(ggplot2)
+ggplot(data_1972, aes(x= FemLabour  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Porcentaje de mujeres en la fuerza laboral' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de mujeres en la fuerza laboral en 2019'>>=
+ggplot(data_2019, aes(x= FemLabour  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Porcentaje de mujeres en la fuerza laboral' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+En este caso lo que salta a la vista es que hay una ausencia de relación. Se esperaría que los países que el porcentaje de mujeres en la fuerza laboral fuera alto también fueran los años de estudio de las mujeres. Sin embargo, si tenemos en cuenta que en África los resultados de trabajo de mujeres fueron \Sexpr{round(mean(data_2019_africa$FemLabour, na.rm = TRUE), 2)} y los años de escolaridad \Sexpr{round(mean(data_2019_africa$FemSchoolYr, na.rm = TRUE), 2)} puede que el trabajo que se presenta por parte de las mujeres no sea académico o requiera algún título en particular. 
+
+\clearpage
+
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de pobreza nacional en 1972'>>=
+library(ggplot2)
+ggplot(data_1972, aes(x= Poverty  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Porcentaje de pobreza nacional' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de pobreza nacional en 2019'>>=
+ggplot(data_2019, aes(x= Poverty  , y = FemSchoolYr , color = region)) +
+  labs(x = 'Porcentaje de pobreza nacional' , y = 'Años de escolaridad (mujeres)', color = 'Continente') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+Al igual que con las primeras gráficas, la primera gráfica no muestra una relación entre las variables. Sin embargo, la segunda sí lo muestro, siendo la relación negativa. Esto puede deberse a que el acceso a la eduación en distintos países se ha equilibrado entre hombres y mujeres, pues la escolaridad (en general) está relacionada negativamente con las mediciones de pobreza. 
+
+\clearpage
+
+\subsection*{Relación entre variables en el mundo, Religión}
+
+De esta interacción solo veremos las gráficas de dispersión entre  Escolaridad vs Porcentaje de mujeres en la fuerza laboral, pues en estas gráficas se ve la diferencia entre los grupos de manera clara.
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de mujeres en la fuerza laboral en 1972'>>=
+library(ggplot2)
+ggplot(data_1972, aes(x= FemLabour  , y = FemSchoolYr , color = religion)) +
+  labs(x = 'Porcentaje de mujeres en la fuerza laboral' , y = 'Años de escolaridad (mujeres)', color = 'Religión') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(4,2), message=FALSE, warning=FALSE, fig.cap='Escolaridad vs Porcentaje de mujeres en la fuerza laboral en 2019'>>=
+ggplot(data_2019, aes(x= FemLabour  , y = FemSchoolYr , color = religion)) +
+  labs(x = 'Porcentaje de mujeres en la fuerza laboral' , y = 'Años de escolaridad (mujeres)', color = 'Religión') + 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1, color = "#7133AB")
+@
+
+Si bien las gráficas siguen sin mostrar ninguna relación entre las dos variables, cuando agrupamos los datos por religión podemos ver que respecto a la religión musulmana hay un cambio negativo en el porcentaje de mujeres en el trabajo. En la gráfica se ve que en 1972 los puntos azules estaban dispersos igual que los otros a lo largo de toda la gráfica. Sin embargo, para el 2019 estos puntos se han acumulado en la esquina inferior izquierda, mostrando que el cambio de este grupo ha sido diferencial con el resto. 
+
+\clearpage
+
+\subsection*{Evolución de las variables en Colombia}
+<<echo=FALSE, fig.pos="h", fig.align='left', fig.dim = c(3,2), message=FALSE, warning=FALSE>>=
+
+par(mfrow= c(2,2))
+
+df_filtered_coun <- df_filtered %>% filter(geo == 'col')
+
+
+ggplot(df_filtered_coun, aes(x = time , y = X1stmarr)) +
+  labs(x = "Año", y ='Edad del primer matrimonio') +
+  geom_line(size=1,color="#C7049E")
+
+ggplot(df_filtered_coun, aes(x = time , y = FemLabour)) +
+  labs(x = "Año", y ='Porcentaje en Fuerza Laboral') +
+  geom_line(size=1,color="#C7049E")
+
+ggplot(df_filtered_coun, aes(x = time , y = Poverty)) +
+  labs(x = "Año", y ='Porcentaje Nacional de Pobreza') +
+  geom_line(size=1,color="#C7049E")
+
+ggplot(df_filtered_coun, aes(x = time , y = FemSchoolYr)) +
+  labs(x = "Año", y ='Años de escolaridad') +
+  geom_line(size=1,color="#C7049E")
+@
+
+Para los datos en Colombia la edad de primer matrimonio y los años de escolaridad aumentan. La segunda variable aumenta de manera constante y de manera regular. El porcentaje de pobreza y el porcentaje de las mujeres en la fuerza laboral disminuyeron considerablemente. El valor de fuerza laboral tiene un cambio inconstante que podría responder a cambios sociales, políticos y legales. Sería importante revisar estos resultados a más profundidad. 
+
+\end{document}
